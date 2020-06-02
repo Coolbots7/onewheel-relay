@@ -1,0 +1,105 @@
+//File: BluetoothUtilImpl
+BluetoothGatt mGatt;
+BluetoothGattService owGatService;
+
+public static ByteArrayOutputStream inkey = new ByteArrayOutputStream();
+public boolean sendKey = true;
+
+//init(MainActivity mainActivity, OWDevice mOWDevice)
+this.mBluetoothAdapter = ((BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
+mOWDevice.bluetoothLe.set("On");
+
+//onServicesDiscovered(BluetoothGatt gatt, int status)
+owGatService = gatt.getService(UUID.fromString(OWDevice.OnewheelServiceUUID));
+
+if (owGatService == null) {
+    return;
+}
+
+mGatt = gatt;
+mOWDevice.isConnected.set(true);
+
+// onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic c, int status)
+Timber.d("Stability Step 2.1: JUST write the descriptor for the Serial Read characteristic to Enable notifications");
+BluetoothGattCharacteristic gC = owGatService.getCharacteristic(UUID.fromString(OWDevice.OnewheelCharacteristicUartSerialRead));
+gatt.setCharacteristicNotification(gC, true);
+Timber.d("and set notify to true with gatt...");
+BluetoothGattDescriptor descriptor = gC.getDescriptor(UUID.fromString(OWDevice.OnewheelConfigUUID));
+descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+gatt.writeDescriptor(descriptor);
+
+//onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic c)
+//STEP 4
+inkey.write(c.getValue());
+//Wait till all 20 bytes are received from serial read
+if (inkey.toByteArray().length >= 20 && sendKey) {
+    ByteArrayOutputStream outkey = new ByteArrayOutputStream();
+
+    //These 3 bytes are always the same from the serial read
+    outkey.write(Util.StringToByteArrayFastest("43:52:58"));
+
+
+    //Get bytes 3-19 (last 17 bytes)
+    byte[] arrayToMD5_part1 = Arrays.copyOfRange(BluetoothUtilImpl.inkey.toByteArray(), 3, 19);
+    //IDK what this string is
+    byte[] arrayToMD5_part2 = Util.StringToByteArrayFastest("D9255F0F23354E19BA739CCDC4A91765");
+    //Create byte array and add bytes 3-19 and the other string
+    ByteBuffer arrayToMD5 = ByteBuffer.allocate(arrayToMD5_part1.length + arrayToMD5_part2.length);
+    arrayToMD5.put(arrayToMD5_part1);
+    arrayToMD5.put(arrayToMD5_part2);
+
+    //Create MD5 hasher?
+    MessageDigest localMessageDigest = MessageDigest.getInstance("MD5");
+    //Hash byte buffer?
+    DigestInputStream digestInputStream = new DigestInputStream(new ByteArrayInputStream(arrayToMD5.array()), localMessageDigest);
+    //wait for hash to finish?
+    while (digestInputStream.read(new byte[]{101}) != -1) {
+    }
+    digestInputStream.close();
+    //Add hashed byte buffer to output
+    outkey.write(localMessageDigest.digest());
+
+    //IDFK either, some sort of checksum
+    byte checkByte = 0;
+    for (byte b : outkey.toByteArray()) {
+        checkByte = (byte) (b ^ checkByte);
+    }
+    //Ad checksum to output
+    outkey.write(checkByte);
+
+    //Write outkey to serial write characteristic
+    BluetoothGattCharacteristic lc = owGatService.getCharacteristic(UUID.fromString(OWDevice.OnewheelCharacteristicUartSerialWrite));
+    lc.setValue(outkey.toByteArray());
+    if (!bluetoothGatt.writeCharacteristic(lc)) {
+        BluetoothGattCharacteristic bluetoothGattCharacteristic2 = lc;
+        //Reset sendkey latch
+        sendKey = true;
+    } else {
+        //Set sendkey latch to enure its only sent once
+        sendKey = false;
+        //Disable notification of serial read characteristic
+        bluetoothGatt.setCharacteristicNotification(bluetoothGattCharacteristic, false);
+    }
+    //Clear byte array
+    outkey.reset();
+}
+
+//File: MainActivity
+OWDevice mOWDevice;
+
+//onCreate
+setupOWDevice();
+periodicChallenge();
+
+//setupOWDevice
+mOWDevice = new OWDevice();
+getBluetoothUtil().init(MainActivity.this, mOWDevice);
+
+//periodicChallenge
+if (getBluetoothUtil().isGemini() && mOWDevice != null && getBluetoothUtil().getStatusMode() == 2) {
+    mOWDevice.sendKeyChallengeForGemini(getBluetoothUtil());
+}
+
+//File: OWDevice
+//sendKeyChallengeForGemini(BluetoothUtil bluetoothUtil)
+bluetoothUtil.writeCharacteristic(bluetoothUtil.getCharacteristic(OnewheelCharacteristicFirmwareRevision));
