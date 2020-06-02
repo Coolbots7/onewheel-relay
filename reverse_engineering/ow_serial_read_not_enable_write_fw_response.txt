@@ -1,0 +1,34 @@
+//Enable Serial Read descriptor handle
+[4C:24:98:70:98:91][LE]> char-write-req 0x0013 0100
+Characteristic value was written successfully
+
+//Wrote FW version
+[4C:24:98:70:98:91][LE]> char-write-req 0x0059 1026
+Characteristic value was written successfully
+
+//Response from OW
+Notification handle = 0x0012 value: 43
+Notification handle = 0x0012 value: 52 58 9f 9e
+Notification handle = 0x0012 value: 52 0c
+Notification handle = 0x0012 value: e1
+Notification handle = 0x0012 value: 46 76
+Notification handle = 0x0012 value: 16 16
+Notification handle = 0x0012 value: d6 ae
+Notification handle = 0x0012 value: 99 71 a0 16 b5 54
+
+
+
+
+
+//Rewrote FW version again later, got different Response
+[4C:24:98:70:98:91][LE]> char-write-req 0x0059 1026
+Characteristic value was written successfully
+Notification handle = 0x0012 value: 43 52 58
+Notification handle = 0x0012 value: 4f 5e
+Notification handle = 0x0012 value: 15 80
+Notification handle = 0x0012 value: 55
+Notification handle = 0x0012 value: b9 e9
+Notification handle = 0x0012 value: 39 49
+Notification handle = 0x0012 value: d9 c7
+Notification handle = 0x0012 value: 9c 8a c4 3a
+Notification handle = 0x0012 value: 89 c7
