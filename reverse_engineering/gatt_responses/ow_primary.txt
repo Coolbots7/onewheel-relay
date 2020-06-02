@@ -1,0 +1,4 @@
+attr handle: 0x0001, end grp handle: 0x000b uuid: 00001800-0000-1000-8000-00805f9b34fb
+attr handle: 0x000c, end grp handle: 0x000f uuid: 00001801-0000-1000-8000-00805f9b34fb
+//OnewheelServiceUUID
+attr handle: 0x0010, end grp handle: 0xffff uuid: e659f300-ea98-11e3-ac10-0800200c9a66

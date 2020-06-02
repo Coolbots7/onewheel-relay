@@ -1,0 +1,35 @@
+[4C:24:98:70:98:91][LE]> characteristics 0x0010 0xffff
+handle: 0x0011, char properties: 0x10, char value handle: 0x0012, uuid: e659f3fe-ea98-11e3-ac10-0800200c9a66 //OnewheelCharacteristicUartSerialRead
+handle: 0x0015, char properties: 0x08, char value handle: 0x0016, uuid: e659f3ff-ea98-11e3-ac10-0800200c9a66
+handle: 0x0018, char properties: 0x1a, char value handle: 0x0019, uuid: e659f301-ea98-11e3-ac10-0800200c9a66
+handle: 0x001c, char properties: 0x1a, char value handle: 0x001d, uuid: e659f302-ea98-11e3-ac10-0800200c9a66
+handle: 0x0020, char properties: 0x1a, char value handle: 0x0021, uuid: e659f303-ea98-11e3-ac10-0800200c9a66 //OnewheelCharacteristicBatteryRemaining
+handle: 0x0024, char properties: 0x1a, char value handle: 0x0025, uuid: e659f304-ea98-11e3-ac10-0800200c9a66
+handle: 0x0028, char properties: 0x1a, char value handle: 0x0029, uuid: e659f305-ea98-11e3-ac10-0800200c9a66
+handle: 0x002c, char properties: 0x1a, char value handle: 0x002d, uuid: e659f306-ea98-11e3-ac10-0800200c9a66
+handle: 0x0030, char properties: 0x1a, char value handle: 0x0031, uuid: e659f307-ea98-11e3-ac10-0800200c9a66
+handle: 0x0034, char properties: 0x1a, char value handle: 0x0035, uuid: e659f308-ea98-11e3-ac10-0800200c9a66
+handle: 0x0038, char properties: 0x1a, char value handle: 0x0039, uuid: e659f309-ea98-11e3-ac10-0800200c9a66
+handle: 0x003c, char properties: 0x1a, char value handle: 0x003d, uuid: e659f30a-ea98-11e3-ac10-0800200c9a66
+handle: 0x0040, char properties: 0x1a, char value handle: 0x0041, uuid: e659f30b-ea98-11e3-ac10-0800200c9a66
+handle: 0x0044, char properties: 0x1a, char value handle: 0x0045, uuid: e659f30c-ea98-11e3-ac10-0800200c9a66
+handle: 0x0048, char properties: 0x1a, char value handle: 0x0049, uuid: e659f30d-ea98-11e3-ac10-0800200c9a66
+handle: 0x004c, char properties: 0x1a, char value handle: 0x004d, uuid: e659f30e-ea98-11e3-ac10-0800200c9a66
+handle: 0x0050, char properties: 0x1a, char value handle: 0x0051, uuid: e659f30f-ea98-11e3-ac10-0800200c9a66
+handle: 0x0054, char properties: 0x1a, char value handle: 0x0055, uuid: e659f310-ea98-11e3-ac10-0800200c9a66
+handle: 0x0058, char properties: 0x1a, char value handle: 0x0059, uuid: e659f311-ea98-11e3-ac10-0800200c9a66 //OnewheelCharacteristicFirmwareRevision
+handle: 0x005c, char properties: 0x1a, char value handle: 0x005d, uuid: e659f312-ea98-11e3-ac10-0800200c9a66
+handle: 0x0060, char properties: 0x1a, char value handle: 0x0061, uuid: e659f313-ea98-11e3-ac10-0800200c9a66
+handle: 0x0064, char properties: 0x1a, char value handle: 0x0065, uuid: e659f314-ea98-11e3-ac10-0800200c9a66
+handle: 0x0068, char properties: 0x1a, char value handle: 0x0069, uuid: e659f315-ea98-11e3-ac10-0800200c9a66
+handle: 0x006c, char properties: 0x1a, char value handle: 0x006d, uuid: e659f316-ea98-11e3-ac10-0800200c9a66
+handle: 0x0070, char properties: 0x1a, char value handle: 0x0071, uuid: e659f317-ea98-11e3-ac10-0800200c9a66
+handle: 0x0074, char properties: 0x1a, char value handle: 0x0075, uuid: e659f318-ea98-11e3-ac10-0800200c9a66
+handle: 0x0078, char properties: 0x1a, char value handle: 0x0079, uuid: e659f319-ea98-11e3-ac10-0800200c9a66
+handle: 0x007c, char properties: 0x1a, char value handle: 0x007d, uuid: e659f31a-ea98-11e3-ac10-0800200c9a66
+handle: 0x0080, char properties: 0x1a, char value handle: 0x0081, uuid: e659f31b-ea98-11e3-ac10-0800200c9a66
+handle: 0x0084, char properties: 0x1a, char value handle: 0x0085, uuid: e659f31c-ea98-11e3-ac10-0800200c9a66
+handle: 0x0088, char properties: 0x1a, char value handle: 0x0089, uuid: e659f31d-ea98-11e3-ac10-0800200c9a66
+handle: 0x008c, char properties: 0x1a, char value handle: 0x008d, uuid: e659f31e-ea98-11e3-ac10-0800200c9a66
+handle: 0x0090, char properties: 0x1a, char value handle: 0x0091, uuid: e659f31f-ea98-11e3-ac10-0800200c9a66
+handle: 0x0094, char properties: 0x1a, char value handle: 0x0095, uuid: e659f320-ea98-11e3-ac10-0800200c9a66

@@ -1,0 +1,5 @@
+handle: 0x000f   value: 00 00
+handle: 0x0013   value: 00 00
+handle: 0x001a   value: 00 00
+handle: 0x001e   value: 00 00
+handle: 0x0022   value: 00 00
