@@ -1,0 +1,20 @@
+{
+  "name": "onewheel-api",
+  "version": "0.1.0",
+  "description": "Present Onewheel data as a REST API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ble",
+    "onewheel",
+    "rest",
+    "api"
+  ],
+  "author": "coolbots7",
+  "license": "ISC",
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-9"
+  }
+}
