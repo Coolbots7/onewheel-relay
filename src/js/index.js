@@ -62,6 +62,24 @@ function unsignedInt(buffer) {
   }
 }
 
+function createAuthenticationResponse(serialReadBytes) {
+  //Create authentication hash
+  const hashSerialBytes = serialReadBytes.slice(3, 19);
+  const hashConst = Buffer.from([0xD9, 0x25, 0x5F, 0x0F, 0x23, 0x35, 0x4E, 0x19, 0xBA, 0x73, 0x9C, 0xCD, 0xC4, 0xA9, 0x17, 0x65]);
+  const hashInput = Buffer.concat([hashSerialBytes, hashConst]);
+  const hashOutput = md5.digest(hashInput);
+  const authenticationResponse = Buffer.concat([Buffer.from([0x43, 0x52, 0x58]), Buffer.from(hashOutput)]);
+
+  //create authentication check byte
+  var checkByte = 0x00;
+  for (var i = 0; i < outputBuffer.length; i++) {
+    checkByte = outputBuffer[i] ^ checkByte;
+  }
+  const authenticationResponse = Buffer.concat([authenticationResponse, Buffer.from([checkByte])]);
+
+  return authenticationResponse;
+}
+
 noble.on('stateChange', function (state) {
   console.log("state changed:", state);
   if (state === 'poweredOn') {
@@ -92,6 +110,8 @@ noble.on('discover', function (peripheral) {
       console.log("connect error: ", error);
       return;
     }
+
+    
 
     console.log("connected");
 
@@ -136,22 +156,11 @@ noble.on('discover', function (peripheral) {
           if (serialReadBufferSize >= 20 && sendKey) {
 
             //create authentication hash
-            const hashSerialBytes = serialReadBuffer.slice(3, 19);
-            const hashConst = Buffer.from([0xD9, 0x25, 0x5F, 0x0F, 0x23, 0x35, 0x4E, 0x19, 0xBA, 0x73, 0x9C, 0xCD, 0xC4, 0xA9, 0x17, 0x65]);
-            const hashInput = Buffer.concat([hashSerialBytes, hashConst]);
-            const hashOutput = md5.digest(hashInput);
-            const outputBuffer = Buffer.concat([Buffer.from([0x43, 0x52, 0x58]), Buffer.from(hashOutput)]);
-
-            //create authentication check byte
-            var checkByte = 0x00;
-            for (var i = 0; i < outputBuffer.length; i++) {
-              checkByte = outputBuffer[i] ^ checkByte;
-            }
-            const authenticationHash = Buffer.concat([outputBuffer, Buffer.from([checkByte])]);
+            const authenticationResponse = createAuthenticationResponse(serialReadBuffer);
 
             //write authentication hash to serial write characteristic
             const serialWriteCharacteristic = getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_WRITE);
-            serialWriteCharacteristic.write(authenticationHash, false, (error) => {
+            serialWriteCharacteristic.write(authenticationResponse, false, (error) => {
               if (error) {
                 console.log("serial write error: ", error);
               }
