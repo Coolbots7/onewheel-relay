@@ -5,9 +5,6 @@ var express = require("express");
 var app = express();
 const PORT = 3000;
 
-const PERIPHERAL_ADDRESS = "4c:24:98:70:98:91".toLowerCase();
-console.log("address:", PERIPHERAL_ADDRESS);
-
 const OW_SERVICE_UUID = 'e659f300ea9811e3ac100800200c9a66';
 
 const OW_CHARACTERISTIC_BATTERY_REMAINING_UUID = 'e659f303ea9811e3ac100800200c9a66';
@@ -37,7 +34,6 @@ function unsignedInt(buffer) {
     return (buffer[0] << 8) + buffer[1];
   }
 }
-
 
 noble.on('stateChange', function (state) {
   console.log("state changed:", state);
@@ -134,6 +130,7 @@ noble.on('discover', function (peripheral) {
 
               console.log("authenticated");
 
+              //Write firmware back to OW regularly to keep authentication valid
               setInterval(() => {
                 firmwareCharacteristic.write(firmwareVersion, false, (error) => {
                   if (error) {
@@ -141,28 +138,6 @@ noble.on('discover', function (peripheral) {
                   }
                 });
               }, 5000);
-
-              const batteryRemainingCharacteristic = characteristics.find(characteristic => characteristic.uuid === OW_CHARACTERISTIC_BATTERY_REMAINING_UUID);
-              const lifetimeOdometerCharacteristic = characteristics.find(characteristic => characteristic.uuid === OW_CHARACTERISTIC_LIFETIME_ODOMETER_UUID);
-
-              setInterval(() => {
-                batteryRemainingCharacteristic.readAsync().then((batteryRemainingData) => {
-                  batteryRemaining = unsignedInt(batteryRemainingData)
-                  console.log("battery remaining: ", batteryRemaining);
-                });
-
-                lifetimeOdometerCharacteristic.readAsync().then((lifetimeOdometerData) => {
-                  lifetimeOdometer = unsignedInt(lifetimeOdometerData)
-                  console.log("lifetime odometer: ", lifetimeOdometer);
-                });
-              }, 5000);
-
-
-
-
-
-
-
 
             });
           };
@@ -173,10 +148,10 @@ noble.on('discover', function (peripheral) {
               console.log("unsubscribe error: ", error);
             }
           });
-        });
 
-      });
+        }); // end on serial read data
 
+      }); // end firmware read
 
     }); // end discover services and characteristics
 
