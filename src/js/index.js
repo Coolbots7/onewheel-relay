@@ -7,21 +7,48 @@ const PORT = 3000;
 
 const OW_SERVICE_UUID = 'e659f300ea9811e3ac100800200c9a66';
 
-const OW_CHARACTERISTIC_BATTERY_REMAINING_UUID = 'e659f303ea9811e3ac100800200c9a66';
-
-const OW_CHARACTERISTIC_FIRMWARE_VERSION_UUID = 'e659f311ea9811e3ac100800200c9a66';
-
-const OW_CHARACTERISTIC_LIFETIME_ODOMETER_UUID = 'e659f319ea9811e3ac100800200c9a66';
-
-const OW_CHARACTERISTIC_UART_SERIAL_READ_UUID = 'e659f3feea9811e3ac100800200c9a66';
-const OW_CHARACTERISTIC_UART_SERIAL_WRITE_UUID = 'e659f3ffea9811e3ac100800200c9a66';
+const OW_CHARACTERISTICS = {
+  SERIAL_NUMBER: 'e659F301ea9811e3ac100800200c9a66',
+  RIDING_MODE: 'e659f302ea9811e3ac100800200c9a66',
+  BATTERY_LOW_5: 'e659f304ea9811e3ac100800200c9a66',
+  BATTERY_LOW_20: 'e659f305ea9811e3ac100800200c9a66',
+  BATTERY_SERIAL: 'e659f306ea9811e3ac100800200c9a66',
+  ANGLE_PITCH: 'e659f307ea9811e3ac100800200c9a66',
+  ANGLE_ROLL: 'e659f308ea9811e3ac100800200c9a66',
+  ANGLE_YAW: 'e659f309ea9811e3ac100800200c9a66',
+  TEMPERATURE: 'e659f310ea9811e3ac100800200c9a66',
+  STATUS_ERROR: 'e659f30fea9811e3ac100800200c9a66',
+  BATTERY_REMAINING: 'e659f303ea9811e3ac100800200c9a66',
+  BATTERY_CELLS: 'e659f31bea9811e3ac100800200c9a66',
+  BATTERY_TEMPERATURE: 'e659f315ea9811e3ac100800200c9a66',
+  BATTERY_VOLTAGE: 'e659f316ea9811e3ac100800200c9a66',
+  CURRENT_AMPS: 'e659f312ea9811e3ac100800200c9a66',
+  CUSTOM_NAME: 'e659f3fdea9811e3ac100800200c9a66',
+  FIRMWARE_VERSION: 'e659f311ea9811e3ac100800200c9a66',
+  HARDWARE_VERSION: 'e659f318ea9811e3ac100800200c9a66',
+  LAST_ERROR_CODE: 'e659f31cea9811e3ac100800200c9a66',
+  LIFETIME_AMPHOURS: 'e659f31aea9811e3ac100800200c9a66',
+  LIFETIME_ODOMETER: 'e659f319ea9811e3ac100800200c9a66',
+  LIGHTING_MODE: 'e659f30cea9811e3ac100800200c9a66',
+  LIGHTS_FRONT: 'e659f30dea9811e3ac100800200c9a66',
+  LIGHTS_BACK: 'e659f30eea9811e3ac100800200c9a66',
+  ODOMETER: 'e659f30aea9811e3ac100800200c9a66',
+  SAFETY_HEADROOM: 'e659f317ea9811e3ac100800200c9a66',
+  SPEED_RPM: 'e659f30bea9811e3ac100800200c9a66',
+  TRIP_REGEN_AMPHOURS: 'e659f314ea9811e3ac100800200c9a66',
+  TRIP_TOTAL_AMPHOURS: 'e659f313ea9811e3ac100800200c9a66',
+  UART_SERIAL_READ: 'e659f3feea9811e3ac100800200c9a66',
+  UART_SERIAL_WRITE: 'e659f3ffea9811e3ac100800200c9a66'
+}
 
 var serialReadBuffer = Buffer.alloc(20);
 var serialReadBufferSize = 0;
 var sendKey = true;
 
-var batteryRemaining = 0;
-var lifetimeOdometer = 0;
+var allCharacteristics = undefined;
+const getCharacteristic = (uuid) => {
+  return allCharacteristics.find(characteristic => characteristic.uuid === uuid);
+}
 
 function unsignedInt(buffer) {
   if (buffer === undefined || buffer.length <= 0) {
@@ -76,14 +103,16 @@ noble.on('discover', function (peripheral) {
 
       console.log("services and characteristics discovered");
 
+      allCharacteristics = characteristics;
+
       //get firmware version characteristic value       
-      const firmwareCharacteristic = characteristics.find(characteristic => characteristic.uuid === OW_CHARACTERISTIC_FIRMWARE_VERSION_UUID);
+      const firmwareCharacteristic = getCharacteristic(OW_CHARACTERISTICS.FIRMWARE_VERSION);
       firmwareCharacteristic.read((error, firmwareVersion) => {
 
         //TODO check firmware eversion >= gemini
 
         //enable notifications on serial read characteristic
-        const serialReadCharacteristic = characteristics.find((characteristic) => characteristic.uuid === OW_CHARACTERISTIC_UART_SERIAL_READ_UUID);
+        const serialReadCharacteristic = getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_READ);
 
         serialReadCharacteristic.subscribe((error) => {
           if (error) {
@@ -121,7 +150,7 @@ noble.on('discover', function (peripheral) {
             const authenticationHash = Buffer.concat([outputBuffer, Buffer.from([checkByte])]);
 
             //write authentication hash to serial write characteristic
-            const serialWriteCharacteristic = characteristics.find(characteristic => characteristic.uuid === OW_CHARACTERISTIC_UART_SERIAL_WRITE_UUID);
+            const serialWriteCharacteristic = getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_WRITE);
             serialWriteCharacteristic.write(authenticationHash, false, (error) => {
               if (error) {
                 console.log("serial write error: ", error);
@@ -164,6 +193,15 @@ app.get("/", (req, res, next) => {
 });
 
 app.get("/onewheel", async (req, res, next) => {
+
+  var batteryRemaining = 0;
+  var lifetimeOdometer = 0;
+
+  if (allCharacteristics) {
+    batteryRemaining = unsignedInt(await getCharacteristic(OW_CHARACTERISTICS.BATTERY_REMAINING).readAsync());
+    lifetimeOdometer = unsignedInt(await getCharacteristic(OW_CHARACTERISTICS.LIFETIME_ODOMETER).readAsync());
+  }
+
   res.send({ 'batteryRemaining': batteryRemaining, 'lifetimeOdometer': lifetimeOdometer })
 });
 
