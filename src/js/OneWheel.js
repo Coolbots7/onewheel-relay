@@ -46,6 +46,9 @@ class OneWheel {
 
         this.allCharacteristics = undefined;
 
+        this.isGemini = false;
+        this.firmwareVersion = null;
+
         this.serialReadBuffer = Buffer.alloc(20);
         this.serialReadBufferSize = 0;
         this.sendKey = true;
@@ -329,8 +332,15 @@ class OneWheel {
             //get firmware version characteristic value       
             const firmwareCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.FIRMWARE_VERSION);
             firmwareCharacteristic.read((error, firmwareVersion) => {
+                this.firmwareVersion = this._unsignedInt(firmwareVersion);
 
-                //TODO check firmware eversion >= gemini
+                if (this.debug) console.log("Firmware Version", this.firmwareVersion);
+
+                if (this.firmwareVersion >= 4134) {
+                    this.isGemini = true;
+                }
+
+                //TODO if firmware < 4134 (gemini), dont authenticate
 
                 //enable notifications on serial read characteristic
                 const serialReadCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_READ);
@@ -435,6 +445,14 @@ class OneWheel {
         if (this.debug) console.log("Hash Input Bytes", hashInput)
         const hashOutput = md5.digest(hashInput);
         if (this.debug) console.log("Hash Output Bytes", hashOutput);
+        var authenticationPrefix = null;
+        if (this.firmwareVersion === 4134) {
+            authenticationPrefix = Buffer.from([0x43, 0x52, 0x58]);
+        }
+        else if (this.firmwareVersion === 4144) {
+            authenticationPrefix = Buffer.from([0x09, 0x8E, 0x56]);
+        }
+        authenticationResponse = Buffer.concat([authenticationPrefix, Buffer.from(hashOutput)]);
 
         //create authentication check byte
         var checkByte = 0x00;
