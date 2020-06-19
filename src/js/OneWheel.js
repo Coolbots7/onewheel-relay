@@ -316,7 +316,7 @@ class OneWheel {
             return;
         }
 
-        console.log("connected");
+        if (this.debug) console.log("connected");
 
         this.peripheral.discoverSomeServicesAndCharacteristics([OW_SERVICE_UUID], [], (error, services, characteristics) => {
             if (error) {
@@ -326,7 +326,7 @@ class OneWheel {
 
             this.allCharacteristics = characteristics;
 
-            console.log("services and characteristics discovered");
+            if (this.debug) console.log("services and characteristics discovered");
 
             //get firmware version characteristic value       
             const firmwareCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.FIRMWARE_VERSION);
@@ -378,8 +378,7 @@ class OneWheel {
                                     return;
                                 }
                                 this.authenticated = true;
-
-                            console.log("authenticated");
+                                if (this.debug) console.log("authenticated");
 
                                 //Write firmware back to OW regularly to keep authentication valid
                                 setInterval(() => {
@@ -404,7 +403,7 @@ class OneWheel {
     }
 
     _onDisconnect() {
-        console.log("disconnected from peripheral: ", this.peripheral.advertisement.localName);
+        if (this.debug) console.log("disconnected from peripheral: ", this.peripheral.advertisement.localName);
     }
 
     _onRSSIUpdate(rssi) {
@@ -430,22 +429,28 @@ class OneWheel {
     }
 
     _createAuthenticationResponse(serialReadBytes) {
+
+        if (this.debug) console.log("Serial Read Bytes", serialReadBytes);
         var authenticationResponse = null;
 
         //Create authentication hash
         const hashSerialBytes = serialReadBytes.slice(3, 19);
+        if (this.debug) console.log("Hash Serial Bytes", hashSerialBytes);
         const hashConst = Buffer.from([0xD9, 0x25, 0x5F, 0x0F, 0x23, 0x35, 0x4E, 0x19, 0xBA, 0x73, 0x9C, 0xCD, 0xC4, 0xA9, 0x17, 0x65]);
         const hashInput = Buffer.concat([hashSerialBytes, hashConst]);
+        if (this.debug) console.log("Hash Input Bytes", hashInput)
         const hashOutput = md5.digest(hashInput);
-        authenticationResponse = Buffer.concat([Buffer.from([0x43, 0x52, 0x58]), Buffer.from(hashOutput)]);
+        if (this.debug) console.log("Hash Output Bytes", hashOutput);
 
         //create authentication check byte
         var checkByte = 0x00;
         for (var i = 0; i < authenticationResponse.length; i++) {
             checkByte = authenticationResponse[i] ^ checkByte;
         }
+        if (this.debug) console.log("Check Byte", checkByte);
         authenticationResponse = Buffer.concat([authenticationResponse, Buffer.from([checkByte])]);
 
+        if (this.debug) console.log("Authentication Response", authenticationResponse);
         return authenticationResponse;
     }
 
