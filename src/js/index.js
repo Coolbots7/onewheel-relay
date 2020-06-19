@@ -25,7 +25,7 @@ noble.on('discover', function (peripheral) {
   noble.stopScanning();
   console.log("OW Peripheral discovered: ", peripheral.advertisement.localName);
 
-  onewheel = new OneWheel.OneWheel(peripheral);
+  onewheel = new OneWheel.OneWheel(peripheral, isOneWheelPlus = false, debug = true);
   onewheel.connect();
 
 }); //end discover
@@ -35,16 +35,71 @@ app.get("/", (req, res, next) => {
 });
 
 app.get("/onewheel", async (req, res, next) => {
+  var status = {};
+  var data = {};
 
-  var batteryRemaining = 0;
-  var lifetimeOdometer = 0;
+  if (onewheel) {
+    status = {
+      'connected': true,
+      'id': onewheel.getID(),
+      'address': onewheel.getAddress(),
+      'localName': onewheel.getLocalName()
+    };
 
-  if(onewheel) {
-    batteryRemaining = await onewheel.getBatteryRemaining();
-    lifetimeOdometer = await onewheel.getLifetimeOdometer();
+    data['serialNumber'] = await onewheel.getSerialNumber();
+    data['ridingMode'] = await onewheel.getRidingMode();
+    data['customName'] = await onewheel.getCustomName();
+    data['firmwareVersion'] = await onewheel.getFirmwareVersion();
+    data['hardwareVersion'] = await onewheel.getHardwareVersion();
+    data['flags'] = await onewheel.getStatusFlags();
+    data['lastErrorCode'] = await onewheel.getLastErrorCode();
+    data['safetyHeadroom'] = await onewheel.getSafetyHeadroom();
+
+    data['angle'] = {
+      'pitch': await onewheel.getAnglePitch(),
+      'roll': await onewheel.getAngleRoll(),
+      'yaw': await onewheel.getAngleYaw()
+    };
+
+    data['lifetime'] = {
+      'odometer': await onewheel.getLifetimeOdometer(),
+      'amp_hours': await onewheel.getLifetimeAmphours()
+    };
+
+    data['current'] = {
+      'rpm': await onewheel.getSpeedRPM(),
+      'amps': await onewheel.getCurrentAmps(),
+      'battery': {
+        'voltage': await onewheel.getBatteryVoltage(),
+        'remaining': await onewheel.getBatteryRemaining(),
+        'cells': await onewheel.getBatteryCells(),
+        'batteryLow5': await onewheel.getBatteryLow5(),
+        'batteryLow20': await onewheel.getBatteryLow20()
+      },
+      'temperature': {
+        'battery': await onewheel.getBatteryTemperature(),
+        'controller': await onewheel.getControllerTemperature(),
+        'motor': await onewheel.getMotorTemperature()
+      },
+      'lights': {
+        'mode': await onewheel.getLightingMode(),
+        'front': await onewheel.getLightsFront(),
+        'back': await onewheel.getLightsBack()
+      }
+    };
+
+    data['trip'] = {
+      'odometer': await onewheel.getTripOdometer(),
+      'regen_amp_hours': await onewheel.getTripRegenAmphours(),
+      'total_amp_hours': await onewheel.getTripTotalAmphours()
+    };
+  }
+  else {
+    status['connected'] = false;
+    data = null;
   }
 
-  res.send({ 'batteryRemaining': batteryRemaining, 'lifetimeOdometer': lifetimeOdometer })
+  res.send({ 'status': status, 'data': data });
 });
 
 app.listen(PORT, () => {
