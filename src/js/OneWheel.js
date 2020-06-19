@@ -358,39 +358,42 @@ class OneWheel {
                     this.serialReadBufferSize += data.length;
                     if (this.serialReadBufferSize >= 20 && this.sendKey) {
 
-                        //create authentication hash
-                        const authenticationResponse = this._createAuthenticationResponse(this.serialReadBuffer);
-
-                        //write authentication hash to serial write characteristic
-                        const serialWriteCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_WRITE);
-                        serialWriteCharacteristic.write(authenticationResponse, false, (error) => {
+                        this.sendKey = false;
+                        //disable notifications on serial read characteristic
+                        serialReadCharacteristic.unsubscribe((error) => {
                             if (error) {
-                                console.log("serial write error: ", error);
+                                console.log("unsubscribe error: ", error);
                                 return;
                             }
-                            this.sendKey = false;
-                            this.authenticated = true;
+
+                            //create authentication hash
+                            const authenticationResponse = this._createAuthenticationResponse(this.serialReadBuffer);
+
+                            //write authentication hash to serial write characteristic
+                            const serialWriteCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.UART_SERIAL_WRITE);
+                            serialWriteCharacteristic.write(authenticationResponse, false, (error) => {
+                                if (error) {
+                                    console.log("serial write error: ", error);
+                                    this.sendKey = true;
+                                    return;
+                                }
+                                this.authenticated = true;
 
                             console.log("authenticated");
 
-                            //Write firmware back to OW regularly to keep authentication valid
-                            setInterval(() => {
-                                firmwareCharacteristic.write(firmwareVersion, false, (error) => {
-                                    if (error) {
-                                        console.log('firmware characteristic write error: ', error);
-                                    }
-                                });
-                            }, 5000);
+                                //Write firmware back to OW regularly to keep authentication valid
+                                setInterval(() => {
+                                    firmwareCharacteristic.write(firmwareVersion, false, (error) => {
+                                        if (error) {
+                                            console.log('firmware characteristic write error: ', error);
+                                        }
+                                    });
+                                }, 5000);
 
+                            });
                         });
-                    };
 
-                    //disable notifications on serial read characteristic
-                    serialReadCharacteristic.unsubscribe((error) => {
-                        if (error) {
-                            console.log("unsubscribe error: ", error);
-                        }
-                    });
+                    }
 
                 }); // end on serial read data
 
