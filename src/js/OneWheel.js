@@ -54,11 +54,9 @@ class OneWheel {
 
         this._onConnect = this._onConnect.bind(this);
         this._onDisconnect = this._onDisconnect.bind(this);
-        this._onRSSIUpdate = this._onRSSIUpdate.bind(this);
 
         this.peripheral.once('connect', this._onConnect);
         this.peripheral.once('disconnect', this._onDisconnect);
-        this.peripheral.once('rssiUpdate', this._onRSSIUpdate);
     }
 
     connect() {
@@ -404,10 +402,6 @@ class OneWheel {
 
     _onDisconnect() {
         if (this.debug) console.log("disconnected from peripheral: ", this.peripheral.advertisement.localName);
-    }
-
-    _onRSSIUpdate(rssi) {
-        console.log("RSSI:", rssi);
     }
 
     //Helper Functions
