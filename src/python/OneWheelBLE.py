@@ -1,5 +1,6 @@
 import gatt
 import hashlib
+import time
 
 
 class OneWheelDeviceManager(gatt.DeviceManager):
@@ -148,7 +149,17 @@ class OneWheelDevice(gatt.Device):
 
         if(characteristic.uuid == self.OW_CHARACTERISTIC_UART_SERIAL_WRITE):
             self._is_authenticated = True
-            self._debug()
+
+            firmware_version_characteristic = self.get_firmware_version_characteristic()
+            
+            while True:
+                self._debug()
+                
+                # write firmware version
+                firmware_version_characteristic.write_value(
+                    firmware_version_characteristic.read_value())
+
+                time.sleep(5)
 
     def get_service(self, uuid):
         for service in self.services:
