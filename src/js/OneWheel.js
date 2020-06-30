@@ -1,4 +1,5 @@
 var md5 = require('js-md5');
+var util = require('util');
 
 const OW_SERVICE_UUID = 'e659f300ea9811e3ac100800200c9a66';
 
@@ -44,6 +45,8 @@ class OneWheel {
 
         this.debug = debug;
 
+        this._triggers = {};
+
         this.allCharacteristics = undefined;
 
         this.isGemini = false;
@@ -57,6 +60,7 @@ class OneWheel {
 
         this._onConnect = this._onConnect.bind(this);
         this._onDisconnect = this._onDisconnect.bind(this);
+        this._authenticate = this._authenticate.bind(this);
 
         this.peripheral.once('connect', this._onConnect);
         this.peripheral.once('disconnect', this._onDisconnect);
@@ -64,6 +68,10 @@ class OneWheel {
 
     connect() {
         this.peripheral.connect();
+    }
+
+    disconnect() {
+        this.peripheral.disconnect();
     }
 
     //Get Peripheral Info
@@ -319,6 +327,45 @@ class OneWheel {
 
         if (this.debug) console.log("connected");
 
+        //short timeout to make sure peripheral remains connected, then call _authenticate
+        setTimeout(this._authenticate, 1000);
+    }
+
+    _onDisconnect() {
+        //TODO fix immediate disconnect issue
+        if (this.debug) console.log("disconnected from peripheral: ", this.peripheral.advertisement.localName);
+
+        this._triggerHandler("disconnect");
+    }
+
+    //Helper Functions
+    _getCharacteristic(uuid) {
+        if (this.allCharacteristics) {
+            return this.allCharacteristics.find(characteristic => characteristic.uuid === uuid);
+        }
+        return null;
+    }
+
+    async _readCharacteristicAsync(uuid) {
+        const characteristic = this._getCharacteristic(uuid);
+
+        if (characteristic) {
+            return await characteristic.readAsync();
+        }
+
+        return null;
+    }
+
+    _authenticate() {
+
+        //make sure peripheral is connected
+        if (!this.peripheral || this.peripheral.state !== "connected") {
+            if (this.debug) console.log("peripheral disconnected");
+            return;
+        }
+
+        if (this.debug) console.log("authenticating...");
+
         this.peripheral.discoverSomeServicesAndCharacteristics([OW_SERVICE_UUID], [], (error, services, characteristics) => {
             if (error) {
                 console.log("error getting services and characteristics:", error);
@@ -327,9 +374,24 @@ class OneWheel {
 
             this.allCharacteristics = characteristics;
 
+            //BUG sometimes after a couple connect / immediate disconnects then a final connect this callback will get called multiple times then freeze.
             if (this.debug) console.log("services and characteristics discovered");
 
-            //get firmware version characteristic value       
+            //get firmware version characteristic value     
+            //BUG  
+            // const characteristic = this._characteristics[serviceUuid][characteristicUuid];
+            //                                                            ^
+
+            // TypeError: Cannot read property 'e659f311ea9811e3ac100800200c9a66' of undefined
+            //     at Gatt.write (/srv/onewheel_relay/src/js/node_modules/@abandonware/noble/lib/hci-socket/gatt.js:548:60)
+            //     at NobleBindings.write (/srv/onewheel_relay/src/js/node_modules/@abandonware/noble/lib/hci-socket/bindings.js:399:10)
+            //     at Noble.write (/srv/onewheel_relay/src/js/node_modules/@abandonware/noble/lib/noble.js:421:18)
+            //     at Characteristic.write (/srv/onewheel_relay/src/js/node_modules/@abandonware/noble/lib/characteristic.js:75:15)
+            //     at Timeout.setInterval [as _onTimeout] (/srv/onewheel_relay/src/js/OneWheel.js:442:60)
+            //     at ontimeout (timers.js:436:11)
+            //     at tryOnTimeout (timers.js:300:5)
+            //     at listOnTimeout (timers.js:263:5)
+            //     at Timer.processTimers (timers.js:223:10)
             const firmwareCharacteristic = this._getCharacteristic(OW_CHARACTERISTICS.FIRMWARE_VERSION);
             firmwareCharacteristic.read((error, firmwareVersion) => {
                 this.firmwareVersion = this._unsignedInt(firmwareVersion);
@@ -407,29 +469,6 @@ class OneWheel {
             }); // end firmware read
 
         }); // end discover services and characteristics
-
-    }
-
-    _onDisconnect() {
-        if (this.debug) console.log("disconnected from peripheral: ", this.peripheral.advertisement.localName);
-    }
-
-    //Helper Functions
-    _getCharacteristic(uuid) {
-        if (this.allCharacteristics) {
-            return this.allCharacteristics.find(characteristic => characteristic.uuid === uuid);
-        }
-        return null;
-    }
-
-    async _readCharacteristicAsync(uuid) {
-        const characteristic = this._getCharacteristic(uuid);
-
-        if (characteristic) {
-            return await characteristic.readAsync();
-        }
-
-        return null;
     }
 
     _createAuthenticationResponse(serialReadBytes) {
@@ -467,7 +506,7 @@ class OneWheel {
     }
 
     _unsignedByte(byte) {
-        return byte & 255;
+        return byte & 0xFF;
     }
 
     _unsignedInt(buffer) {
@@ -496,6 +535,21 @@ class OneWheel {
         }
 
         return null;
+    }
+
+    on(event, callback) {
+        if (!this._triggers[event]) {
+            this._triggers[event] = [];
+        }
+        this._triggers[event].push(callback);
+    }
+
+    _triggerHandler(event, params) {
+        if (this._triggers[event]) {
+            for (const i in this._triggers[event]) {
+                this._triggers[event][i](params);
+            }
+        }
     }
 };
 

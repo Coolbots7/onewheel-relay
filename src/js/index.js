@@ -11,11 +11,15 @@ const PORT = 3000;
 
 var onewheel = null;
 
+function startScanning() {
+  console.log("starting scan");
+  noble.startScanning([OneWheel.OW_SERVICE_UUID], false);
+}
+
 noble.on('stateChange', function (state) {
   console.log("state changed:", state);
   if (state === 'poweredOn') {
-    console.log("starting scan");
-    noble.startScanning([OneWheel.OW_SERVICE_UUID], false);
+    startScanning();
   } else {
     noble.stopScanning();
   }
@@ -25,8 +29,19 @@ noble.on('discover', function (peripheral) {
   noble.stopScanning();
   console.log("OW Peripheral discovered: ", peripheral.advertisement.localName);
 
-  onewheel = new OneWheel.OneWheel(peripheral, isOneWheelPlus = false, debug = true);
-  onewheel.connect();
+  if (!onewheel) {
+    onewheel = new OneWheel.OneWheel(peripheral, isOneWheelPlus = false, debug = true);
+
+    onewheel.on("disconnect", () => {
+      console.log("OneWheel disconnected");
+      onewheel.disconnect();
+      onewheel = null;
+
+      setTimeout(startScanning, 10000);
+    });
+
+    onewheel.connect();
+  }
 
 }); //end discover
 
