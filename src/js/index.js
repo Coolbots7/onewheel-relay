@@ -9,6 +9,8 @@ const PORT = 3000;
 //TODO add mac address environment variable
 //TODO if no mac address environment variable, default to looking for service
 
+//TODO add multi-onewheel support
+
 var onewheel = null;
 
 function startScanning() {
@@ -62,19 +64,11 @@ app.get("/onewheel", async (req, res, next) => {
     };
 
     data['serialNumber'] = await onewheel.getSerialNumber();
-    data['ridingMode'] = await onewheel.getRidingMode();
     data['customName'] = await onewheel.getCustomName();
     data['firmwareVersion'] = await onewheel.getFirmwareVersion();
     data['hardwareVersion'] = await onewheel.getHardwareVersion();
-    data['flags'] = await onewheel.getStatusFlags();
-    data['lastErrorCode'] = await onewheel.getLastErrorCode();
     data['safetyHeadroom'] = await onewheel.getSafetyHeadroom();
 
-    data['angle'] = {
-      'pitch': await onewheel.getAnglePitch(),
-      'roll': await onewheel.getAngleRoll(),
-      'yaw': await onewheel.getAngleYaw()
-    };
 
     data['lifetime'] = {
       'odometer': await onewheel.getLifetimeOdometer(),
@@ -82,6 +76,9 @@ app.get("/onewheel", async (req, res, next) => {
     };
 
     data['current'] = {
+      'ridingMode': await onewheel.getRidingMode(),
+      'flags': await onewheel.getStatusFlags(),
+      'lastErrorCode': await onewheel.getLastErrorCode(),
       'rpm': await onewheel.getSpeedRPM(),
       'amps': await onewheel.getCurrentAmps(),
       'battery': {
@@ -100,7 +97,13 @@ app.get("/onewheel", async (req, res, next) => {
         'mode': await onewheel.getLightingMode(),
         'front': await onewheel.getLightsFront(),
         'back': await onewheel.getLightsBack()
+      },
+      'angle': {
+        'pitch': await onewheel.getAnglePitch(),
+        'roll': await onewheel.getAngleRoll(),
+        'yaw': await onewheel.getAngleYaw()
       }
+
     };
 
     data['trip'] = {
