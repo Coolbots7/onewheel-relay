@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "@abandonware/noble": "^1.9.2-9",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "js-md5": "^0.7.3"
   }
 }
